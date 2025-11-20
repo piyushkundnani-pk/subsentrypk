@@ -15,6 +15,8 @@ import {
 import { useSubscriptions } from '@/contexts/SubscriptionContext';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { Mail, Loader2 } from 'lucide-react';
 
 export default function Reminders() {
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ export default function Reminders() {
   
   const [globalEnabled, setGlobalEnabled] = useState(settings.global_reminder_enabled);
   const [globalDays, setGlobalDays] = useState(settings.global_reminder_days_before.toString());
+  const [isSendingTest, setIsSendingTest] = useState(false);
   
   const [overrides, setOverrides] = useState<Record<string, { enabled: boolean; days: string }>>(
     {}
@@ -55,6 +58,35 @@ export default function Reminders() {
 
     toast.success('Reminder settings saved successfully');
     navigate('/dashboard');
+  };
+
+  const handleSendTestReminder = async () => {
+    setIsSendingTest(true);
+    try {
+      console.log('Triggering test reminder...');
+      
+      const { data, error } = await supabase.functions.invoke('send-test-reminder');
+      
+      if (error) {
+        console.error('Error sending test reminder:', error);
+        throw error;
+      }
+      
+      console.log('Test reminder result:', data);
+      
+      if (data.sent > 0) {
+        toast.success(`Test reminder sent! ${data.sent} email(s) sent successfully.`);
+      } else if (data.total === 0) {
+        toast.info('No pending reminders found. Add a subscription with a future renewal date to test.');
+      } else {
+        toast.warning(`${data.failed} reminder(s) failed to send. Check your email settings.`);
+      }
+    } catch (error) {
+      console.error('Failed to send test reminder:', error);
+      toast.error('Failed to send test reminder. Please check your settings.');
+    } finally {
+      setIsSendingTest(false);
+    }
   };
 
   const activeSubscriptions = subscriptions.filter((sub) => sub.status === 'Active');
@@ -208,11 +240,31 @@ export default function Reminders() {
           )}
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-end gap-4 mt-8">
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            Cancel
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mt-8">
+          <Button 
+            variant="outline" 
+            onClick={handleSendTestReminder}
+            disabled={isSendingTest || !globalEnabled}
+            className="gap-2"
+          >
+            {isSendingTest ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                <Mail className="h-4 w-4" />
+                Send Test Reminder
+              </>
+            )}
           </Button>
-          <Button onClick={handleSave}>Save Reminder Settings</Button>
+          <div className="flex gap-4">
+            <Button variant="outline" onClick={() => navigate(-1)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>Save Reminder Settings</Button>
+          </div>
         </div>
       </div>
     </div>
