@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import Setup from "./pages/Setup";
 import Dashboard from "./pages/Dashboard";
 import SubscriptionsList from "./pages/SubscriptionsList";
@@ -29,6 +30,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Navigate to="/auth" replace />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route
                 path="/setup"
                 element={
