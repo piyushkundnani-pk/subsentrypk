@@ -24,9 +24,13 @@ export default function Auth() {
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
-    console.log('[Auth] Auth state check - authLoading:', authLoading, 'isAuthenticated:', isAuthenticated);
+    if (import.meta.env.DEV) {
+      console.log('[Auth] Auth state check - authLoading:', authLoading, 'isAuthenticated:', isAuthenticated);
+    }
     if (!authLoading && isAuthenticated) {
-      console.log('[Auth] User already authenticated, redirecting to dashboard');
+      if (import.meta.env.DEV) {
+        console.log('[Auth] User already authenticated, redirecting to dashboard');
+      }
       navigate('/dashboard', { replace: true });
     }
   }, [isAuthenticated, authLoading, navigate]);
@@ -35,7 +39,9 @@ export default function Auth() {
     try {
       setIsGoogleLoading(true);
       const redirectTo = `${window.location.origin}/auth/callback`;
-      console.log('[Auth] Initiating Google OAuth with redirectTo:', redirectTo);
+      if (import.meta.env.DEV) {
+        console.log('[Auth] Initiating Google OAuth with redirectTo:', redirectTo);
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

@@ -8,25 +8,33 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      console.log('[AuthCallback] Processing OAuth callback...');
+      if (import.meta.env.DEV) {
+        console.log('[AuthCallback] Processing OAuth callback...');
+      }
       
       // Check if we have a code in the URL (OAuth flow)
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const code = hashParams.get('code');
       
       if (code) {
-        console.log('[AuthCallback] Found OAuth code, exchanging for session...');
+        if (import.meta.env.DEV) {
+          console.log('[AuthCallback] Found OAuth code, exchanging for session...');
+        }
         // Exchange the code for a session
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         
         if (error) {
-          console.error('[AuthCallback] Error exchanging code:', error);
+          if (import.meta.env.DEV) {
+            console.error('[AuthCallback] Error exchanging code:', error);
+          }
           navigate('/auth', { replace: true });
           return;
         }
         
         if (data.session) {
-          console.log('[AuthCallback] Session established, redirecting to dashboard');
+          if (import.meta.env.DEV) {
+            console.log('[AuthCallback] Session established, redirecting to dashboard');
+          }
           // Small delay to ensure AuthContext has updated
           setTimeout(() => {
             navigate('/dashboard', { replace: true });
@@ -39,16 +47,22 @@ export default function AuthCallback() {
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error) {
-        console.error('[AuthCallback] Error getting session:', error);
+        if (import.meta.env.DEV) {
+          console.error('[AuthCallback] Error getting session:', error);
+        }
         navigate('/auth', { replace: true });
         return;
       }
 
       if (session) {
-        console.log('[AuthCallback] Existing session found, redirecting to dashboard');
+        if (import.meta.env.DEV) {
+          console.log('[AuthCallback] Existing session found, redirecting to dashboard');
+        }
         navigate('/dashboard', { replace: true });
       } else {
-        console.log('[AuthCallback] No session found, redirecting to auth');
+        if (import.meta.env.DEV) {
+          console.log('[AuthCallback] No session found, redirecting to auth');
+        }
         navigate('/auth', { replace: true });
       }
     };

@@ -34,7 +34,16 @@ serve(async (req) => {
     }
 
     const url = new URL(req.url);
-    const daysAhead = parseInt(url.searchParams.get('days') || '30');
+    const daysParam = url.searchParams.get('days') || '30';
+    const daysAhead = parseInt(daysParam);
+
+    // Validate: must be a positive integer between 1 and 365
+    if (isNaN(daysAhead) || daysAhead < 1 || daysAhead > 365) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid days parameter. Must be between 1 and 365.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const { data, error } = await supabaseClient.rpc('get_upcoming_renewals', {
       p_user_id: user.id,
