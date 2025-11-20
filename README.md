@@ -1,4 +1,35 @@
-# Welcome to your Lovable project
+# SubSentry
+
+**No more surprise renewals. See all your subscriptions in one calm dashboard.**
+
+SubSentry helps you track and manage all your recurring subscriptions in one place, so you never miss a renewal or get surprised by unexpected charges.
+
+## Features
+
+- 📊 **Dashboard Overview** - See your monthly and annual spend at a glance
+- 📅 **Upcoming Renewals** - Get a clear view of subscriptions renewing soon
+- 🔔 **Smart Reminders** - Customize reminder settings globally or per subscription
+- 📝 **Easy Management** - Add, edit, and track all your subscriptions
+- 🏷️ **Organization** - Tag subscriptions as Personal, Work, or Family
+- 📤 **Data Export** - Export your subscription data as CSV anytime
+- 🎨 **Beautiful Design** - Calm, clear interface with no harsh alerts
+
+## Getting Started
+
+1. **Sign up** - Create your account to get started
+2. **Add subscriptions** - Use the setup wizard to add your first subscriptions
+3. **Stay informed** - Get reminders before renewals so there are no surprises
+
+## Tech Stack
+
+This project is built with:
+
+- React + TypeScript
+- Vite
+- Tailwind CSS
+- shadcn/ui components
+- React Router
+- Lucide Icons
 
 ## Project info
 
