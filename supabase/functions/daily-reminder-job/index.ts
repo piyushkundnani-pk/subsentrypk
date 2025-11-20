@@ -6,6 +6,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// HTML escape helper to prevent XSS in email templates
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, (m) => map[m]);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -75,19 +87,19 @@ serve(async (req) => {
             <h1 style="color: #0d9488; font-size: 24px; margin-bottom: 24px;">Upcoming Renewal Reminder</h1>
             
             <p style="color: #374151; font-size: 16px; line-height: 1.5;">
-              Hi ${profile.full_name || 'there'},
+              Hi ${escapeHtml(profile.full_name || 'there')},
             </p>
             
             <p style="color: #374151; font-size: 16px; line-height: 1.5;">
-              This is a friendly reminder that your <strong>${subscription.name}</strong> subscription is renewing ${daysUntil === 0 ? 'today' : `in ${daysUntil} ${daysUntil === 1 ? 'day' : 'days'}`}.
+              This is a friendly reminder that your <strong>${escapeHtml(subscription.name)}</strong> subscription is renewing ${daysUntil === 0 ? 'today' : `in ${daysUntil} ${daysUntil === 1 ? 'day' : 'days'}`}.
             </p>
             
             <div style="background-color: #f0fdfa; border-left: 4px solid: #0d9488; padding: 16px; margin: 24px 0; border-radius: 4px;">
               <h2 style="color: #0d9488; font-size: 18px; margin: 0 0 12px 0;">Subscription Details</h2>
-              <p style="margin: 8px 0; color: #374151;"><strong>Name:</strong> ${subscription.name}</p>
-              <p style="margin: 8px 0; color: #374151;"><strong>Amount:</strong> ${subscription.currency} ${subscription.amount}</p>
-              <p style="margin: 8px 0; color: #374151;"><strong>Renewal Date:</strong> ${new Date(subscription.next_renewal_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-              <p style="margin: 8px 0; color: #374151;"><strong>Payment Method:</strong> ${subscription.payment_method || 'Not specified'}</p>
+              <p style="margin: 8px 0; color: #374151;"><strong>Name:</strong> ${escapeHtml(subscription.name)}</p>
+              <p style="margin: 8px 0; color: #374151;"><strong>Amount:</strong> ${escapeHtml(subscription.currency)} ${escapeHtml(String(subscription.amount))}</p>
+              <p style="margin: 8px 0; color: #374151;"><strong>Renewal Date:</strong> ${escapeHtml(new Date(subscription.next_renewal_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }))}</p>
+              <p style="margin: 8px 0; color: #374151;"><strong>Payment Method:</strong> ${escapeHtml(subscription.payment_method || 'Not specified')}</p>
             </div>
             
             <p style="color: #6b7280; font-size: 14px; line-height: 1.5; margin-top: 24px;">

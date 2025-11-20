@@ -35,8 +35,18 @@ serve(async (req) => {
 
     // GET /reminders - List user's reminders
     if (req.method === 'GET') {
-      const url = new URL(req.url);
-      const status = url.searchParams.get('status');
+    const url = new URL(req.url);
+    const status = url.searchParams.get('status');
+
+    // Validate enum values
+    const validStatuses = ['planned', 'pending', 'sent', 'failed'];
+
+    if (status && !validStatuses.includes(status)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid status parameter. Must be one of: planned, pending, sent, failed' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
       let query = supabaseClient
         .from('reminders')

@@ -62,6 +62,24 @@ serve(async (req) => {
       const status = url.searchParams.get('status');
       const tag = url.searchParams.get('tag');
 
+      // Validate enum values
+      const validStatuses = ['Active', 'Cancelled', 'Paused'];
+      const validTags = ['Personal', 'Work', 'Family'];
+
+      if (status && !validStatuses.includes(status)) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid status parameter. Must be one of: Active, Cancelled, Paused' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (tag && !validTags.includes(tag)) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid tag parameter. Must be one of: Personal, Work, Family' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       let query = supabaseClient
         .from('subscriptions')
         .select('*')
