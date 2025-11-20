@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,10 +29,16 @@ const popularServices = [
 const categories = ['Entertainment', 'Shopping', 'Storage', 'Health & Fitness', 'Software', 'Utilities', 'Other'];
 const billingFrequencies = ['Monthly', 'Yearly', 'Weekly', 'Quarterly'];
 
+const ONBOARDING_GOAL = 3;
+
 export default function Setup() {
   const navigate = useNavigate();
-  const { addSubscription } = useSubscriptions();
+  const { addSubscription, subscriptions } = useSubscriptions();
   const [addedSubs, setAddedSubs] = useState<Partial<Subscription>[]>([]);
+  
+  // Track total count including existing subscriptions
+  const activeSubsCount = subscriptions.filter(s => s.status === 'Active').length;
+  const totalCount = activeSubsCount + addedSubs.length;
   
   const [formData, setFormData] = useState({
     name: '',
@@ -54,7 +60,7 @@ export default function Setup() {
     });
   };
 
-  const handleAddSubscription = () => {
+  const handleAddSubscription = async () => {
     if (!formData.name || !formData.amount || !formData.next_renewal_date) {
       toast.error('Please fill in all required fields');
       return;
@@ -66,35 +72,38 @@ export default function Setup() {
       status: 'Active' as const,
     };
 
-    setAddedSubs([...addedSubs, newSub]);
-    
-    // Reset form
-    setFormData({
-      name: '',
-      category: 'Entertainment',
-      amount: '',
-      currency: 'USD',
-      billing_frequency: 'Monthly',
-      next_renewal_date: '',
-      payment_method: '',
-      tag: 'Personal',
-      notes: '',
-    });
+    // Save to backend immediately
+    try {
+      await addSubscription(newSub as Omit<Subscription, 'id' | 'createdAt'>);
+      
+      // Reset form
+      setFormData({
+        name: '',
+        category: 'Entertainment',
+        amount: '',
+        currency: 'USD',
+        billing_frequency: 'Monthly',
+        next_renewal_date: '',
+        payment_method: '',
+        tag: 'Personal',
+        notes: '',
+      });
 
-    toast.success(`${newSub.name} added to your list`);
+      toast.success(`${newSub.name} added!`);
+      
+      // Check if we've reached the goal (account for newly added sub)
+      const newTotalCount = subscriptions.filter(s => s.status === 'Active').length + 1;
+      if (newTotalCount >= ONBOARDING_GOAL) {
+        toast.success('Great! You\'ve added your first subscriptions. Redirecting to dashboard...');
+        setTimeout(() => navigate('/dashboard'), 1500);
+      }
+    } catch (error) {
+      toast.error('Failed to add subscription. Please try again.');
+    }
   };
 
   const handleContinue = () => {
-    if (addedSubs.length === 0) {
-      toast.error('Please add at least one subscription to continue');
-      return;
-    }
-
-    // Add all subscriptions
-    addedSubs.forEach((sub) => {
-      addSubscription(sub as Omit<Subscription, 'id' | 'createdAt'>);
-    });
-
+    // All subs are already saved, just navigate
     toast.success('Your subscriptions have been saved!');
     navigate('/dashboard');
   };
@@ -108,9 +117,16 @@ export default function Setup() {
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-            Let's add your subscriptions
+            Add your first {ONBOARDING_GOAL} active subscriptions
           </h1>
-          <p className="text-primary font-medium">Step 1 of 3</p>
+          <div className="flex items-center gap-3">
+            <p className="text-muted-foreground">
+              Start by logging the subscriptions you care about most. You can add more later from the dashboard.
+            </p>
+            <Badge variant="secondary" className="text-sm font-semibold">
+              {totalCount} of {ONBOARDING_GOAL} added
+            </Badge>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -272,33 +288,49 @@ export default function Setup() {
 
           <div className="md:col-span-1">
             <Card className="p-6 sticky top-8">
-              <h3 className="font-semibold mb-4">Your list so far</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold">Your subscriptions</h3>
+                <Badge variant={totalCount >= ONBOARDING_GOAL ? 'default' : 'secondary'}>
+                  {totalCount}/{ONBOARDING_GOAL}
+                </Badge>
+              </div>
               
-              {addedSubs.length === 0 ? (
+              {totalCount === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No subscriptions added yet. Start by selecting a popular service or adding one manually.
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {addedSubs.map((sub, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                    >
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{sub.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                        ${sub.amount} / {sub.billing_frequency?.toLowerCase()}
-                        </p>
+                  {/* Show existing active subscriptions first */}
+                  {subscriptions
+                    .filter(s => s.status === 'Active')
+                    .map((sub) => (
+                      <div
+                        key={sub.id}
+                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{sub.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            ${sub.amount} / {sub.billing_frequency?.toLowerCase()}
+                          </p>
+                        </div>
+                        <Badge variant="secondary" className="text-xs">
+                          {new Date(sub.next_renewal_date).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </Badge>
                       </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {new Date(sub.next_renewal_date!).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </Badge>
-                    </div>
-                  ))}
+                    ))}
+                </div>
+              )}
+              
+              {totalCount >= ONBOARDING_GOAL && (
+                <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                  <p className="text-sm text-primary font-medium">
+                    ✓ Goal reached! You can add more or continue to dashboard.
+                  </p>
                 </div>
               )}
             </Card>
@@ -311,7 +343,7 @@ export default function Setup() {
           </Button>
           <Button
             onClick={handleContinue}
-            disabled={addedSubs.length === 0}
+            disabled={totalCount === 0}
             size="lg"
           >
             Continue to dashboard
