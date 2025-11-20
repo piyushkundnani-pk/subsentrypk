@@ -33,7 +33,7 @@ export default function Settings() {
   const { settings, updateSettings, subscriptions } = useSubscriptions();
   
   const [formData, setFormData] = useState({
-    name: user?.name || '',
+    name: user?.user_metadata?.full_name || '',
     email: user?.email || '',
     defaultCurrency: settings.defaultCurrency,
     timeZone: settings.timeZone,
@@ -43,7 +43,7 @@ export default function Settings() {
 
   useEffect(() => {
     setFormData({
-      name: user?.name || '',
+      name: user?.user_metadata?.full_name || '',
       email: user?.email || '',
       defaultCurrency: settings.defaultCurrency,
       timeZone: settings.timeZone,
