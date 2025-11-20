@@ -11,18 +11,29 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Verify cron secret for security
-  const cronSecret = req.headers.get('X-Cron-Secret');
-  if (cronSecret !== Deno.env.get('CRON_SECRET')) {
-    console.error('Unauthorized access attempt to daily-reminder-job');
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 403,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-
   try {
-    console.log('Starting daily reminder job...');
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
+    );
+
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
+
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log(`Test reminder requested by user: ${user.id}`);
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     
@@ -33,12 +44,12 @@ serve(async (req) => {
 
     const today = new Date().toISOString().split('T')[0];
 
-    // Get all reminders due today OR in the past that haven't been sent
-    // This allows testing with reminder_dates that have already passed
+    // Get all pending reminders for this user (including past ones)
     const { data: dueReminders, error: remindersError } = await supabaseAdmin
       .from('reminders')
       .select('*, subscriptions(*), profiles(*)')
-      .lte('reminder_date', today) // Changed to lte (less than or equal)
+      .eq('user_id', user.id)
+      .lte('reminder_date', today)
       .in('status', ['planned', 'pending']);
 
     if (remindersError) {
@@ -46,7 +57,7 @@ serve(async (req) => {
       throw remindersError;
     }
 
-    console.log(`Found ${dueReminders?.length || 0} reminders to send`);
+    console.log(`Found ${dueReminders?.length || 0} reminders to send for user ${user.id}`);
 
     const results = {
       total: dueReminders?.length || 0,
@@ -62,6 +73,7 @@ serve(async (req) => {
 
         if (!subscription || !profile) {
           console.error(`Missing data for reminder ${reminder.id}`);
+          results.errors.push(`Reminder ${reminder.id}: Missing subscription or profile data`);
           continue;
         }
 
@@ -79,10 +91,10 @@ serve(async (req) => {
             </p>
             
             <p style="color: #374151; font-size: 16px; line-height: 1.5;">
-              This is a friendly reminder that your <strong>${subscription.name}</strong> subscription is renewing ${daysUntil === 0 ? 'today' : `in ${daysUntil} ${daysUntil === 1 ? 'day' : 'days'}`}.
+              This is a friendly reminder that your <strong>${subscription.name}</strong> subscription is renewing ${daysUntil === 0 ? 'today' : daysUntil < 0 ? `${Math.abs(daysUntil)} days ago` : `in ${daysUntil} ${daysUntil === 1 ? 'day' : 'days'}`}.
             </p>
             
-            <div style="background-color: #f0fdfa; border-left: 4px solid: #0d9488; padding: 16px; margin: 24px 0; border-radius: 4px;">
+            <div style="background-color: #f0fdfa; border-left: 4px solid #0d9488; padding: 16px; margin: 24px 0; border-radius: 4px;">
               <h2 style="color: #0d9488; font-size: 18px; margin: 0 0 12px 0;">Subscription Details</h2>
               <p style="margin: 8px 0; color: #374151;"><strong>Name:</strong> ${subscription.name}</p>
               <p style="margin: 8px 0; color: #374151;"><strong>Amount:</strong> ${subscription.currency} ${subscription.amount}</p>
@@ -97,10 +109,12 @@ serve(async (req) => {
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
             
             <p style="color: #9ca3af; font-size: 12px;">
-              This is an automated reminder from SubSentry. You can adjust your reminder settings in the app.
+              This is a test reminder from SubSentry. You can adjust your reminder settings in the app.
             </p>
           </div>
         `;
+
+        console.log(`Sending test email to ${profile.email} for subscription ${subscription.name}`);
 
         // Send email via Resend API
         const emailResponse = await fetch('https://api.resend.com/emails', {
@@ -112,17 +126,19 @@ serve(async (req) => {
           body: JSON.stringify({
             from: "SubSentry <reminders@subsentry.app>",
             to: [profile.email],
-            subject: `Reminder: ${subscription.name} renews ${daysUntil === 0 ? 'today' : `in ${daysUntil} days`}`,
+            subject: `[TEST] Reminder: ${subscription.name} renews ${daysUntil === 0 ? 'today' : daysUntil < 0 ? 'soon' : `in ${daysUntil} days`}`,
             html: emailHtml,
           }),
         });
 
         if (!emailResponse.ok) {
           const errorText = await emailResponse.text();
+          console.error(`Resend API error for reminder ${reminder.id}:`, errorText);
           throw new Error(`Resend API error: ${errorText}`);
         }
 
-        console.log(`Email sent for reminder ${reminder.id}:`, emailResponse);
+        const emailData = await emailResponse.json();
+        console.log(`Email sent successfully for reminder ${reminder.id}:`, emailData);
 
         // Update reminder status to sent
         await supabaseAdmin
@@ -151,13 +167,13 @@ serve(async (req) => {
       }
     }
 
-    console.log('Daily reminder job completed:', results);
+    console.log('Test reminder job completed:', results);
 
     return new Response(JSON.stringify(results), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: unknown) {
-    console.error('Error in daily reminder job:', error);
+    console.error('Error in send-test-reminder function:', error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
