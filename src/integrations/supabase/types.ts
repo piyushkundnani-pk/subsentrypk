@@ -14,16 +14,235 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reminders: {
+        Row: {
+          created_at: string
+          days_before: number
+          error_message: string | null
+          id: string
+          reminder_date: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["reminder_status"]
+          subscription_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          days_before: number
+          error_message?: string | null
+          id?: string
+          reminder_date: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["reminder_status"]
+          subscription_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          days_before?: number
+          error_message?: string | null
+          id?: string
+          reminder_date?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["reminder_status"]
+          subscription_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminders_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reminders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          amount: number
+          billing_frequency: Database["public"]["Enums"]["billing_frequency"]
+          category: string
+          created_at: string
+          currency: string
+          custom_billing_interval_days: number | null
+          icon: string | null
+          id: string
+          name: string
+          next_renewal_date: string
+          notes: string | null
+          override_reminder_days: number | null
+          override_reminder_enabled: boolean | null
+          payment_method: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          tag: Database["public"]["Enums"]["subscription_tag"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          billing_frequency?: Database["public"]["Enums"]["billing_frequency"]
+          category: string
+          created_at?: string
+          currency?: string
+          custom_billing_interval_days?: number | null
+          icon?: string | null
+          id?: string
+          name: string
+          next_renewal_date: string
+          notes?: string | null
+          override_reminder_days?: number | null
+          override_reminder_enabled?: boolean | null
+          payment_method?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tag?: Database["public"]["Enums"]["subscription_tag"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          billing_frequency?: Database["public"]["Enums"]["billing_frequency"]
+          category?: string
+          created_at?: string
+          currency?: string
+          custom_billing_interval_days?: number | null
+          icon?: string | null
+          id?: string
+          name?: string
+          next_renewal_date?: string
+          notes?: string | null
+          override_reminder_days?: number | null
+          override_reminder_enabled?: boolean | null
+          payment_method?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tag?: Database["public"]["Enums"]["subscription_tag"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_settings: {
+        Row: {
+          created_at: string
+          default_currency: string
+          email_notifications_enabled: boolean
+          global_reminder_days_before: number
+          global_reminder_enabled: boolean
+          monthly_summary_enabled: boolean
+          time_zone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_currency?: string
+          email_notifications_enabled?: boolean
+          global_reminder_days_before?: number
+          global_reminder_enabled?: boolean
+          monthly_summary_enabled?: boolean
+          time_zone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_currency?: string
+          email_notifications_enabled?: boolean
+          global_reminder_days_before?: number
+          global_reminder_enabled?: boolean
+          monthly_summary_enabled?: boolean
+          time_zone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_reminder_date: {
+        Args: { p_days_before: number; p_next_renewal_date: string }
+        Returns: string
+      }
+      get_upcoming_renewals: {
+        Args: { p_days_ahead?: number; p_user_id: string }
+        Returns: {
+          amount: number
+          billing_frequency: Database["public"]["Enums"]["billing_frequency"]
+          category: string
+          currency: string
+          days_until_renewal: number
+          id: string
+          name: string
+          next_renewal_date: string
+          payment_method: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          tag: Database["public"]["Enums"]["subscription_tag"]
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      billing_frequency:
+        | "Weekly"
+        | "Monthly"
+        | "Quarterly"
+        | "Yearly"
+        | "Custom"
+      reminder_status: "planned" | "pending" | "sent" | "failed"
+      subscription_status: "Active" | "Cancelled" | "Paused"
+      subscription_tag: "Personal" | "Work" | "Family"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +369,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      billing_frequency: ["Weekly", "Monthly", "Quarterly", "Yearly", "Custom"],
+      reminder_status: ["planned", "pending", "sent", "failed"],
+      subscription_status: ["Active", "Cancelled", "Paused"],
+      subscription_tag: ["Personal", "Work", "Family"],
+    },
   },
 } as const
