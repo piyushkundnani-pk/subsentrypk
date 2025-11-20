@@ -24,9 +24,10 @@ serve(async (req) => {
       });
     }
 
-    const supabaseClient = createClient(
+    // Create admin client to verify the JWT and get user
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         global: {
           headers: { Authorization: authHeader },
@@ -34,15 +35,16 @@ serve(async (req) => {
       }
     );
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser();
+    // Extract JWT token from header
+    const jwt = authHeader.replace('Bearer ', '');
+    
+    // Verify the JWT and get user
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(jwt);
 
-    console.log('User fetch result:', { hasUser: !!user, error: userError });
+    console.log('User verification result:', { hasUser: !!user, userId: user?.id, error: userError });
 
     if (userError || !user) {
-      console.error('Failed to get user:', userError);
+      console.error('Failed to verify user:', userError);
       return new Response(JSON.stringify({ error: 'Unauthorized', details: userError?.message }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -53,10 +55,8 @@ serve(async (req) => {
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Continue using admin client for database operations
+    // (supabaseAdmin is already created above with service role key)
 
     const today = new Date().toISOString().split('T')[0];
 
