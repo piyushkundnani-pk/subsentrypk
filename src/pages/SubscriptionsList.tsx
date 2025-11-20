@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSubscriptions } from '@/contexts/SubscriptionContext';
+import { formatCurrency } from '@/lib/currency';
 import {
   Table,
   TableBody,
@@ -16,7 +17,7 @@ import {
 
 export default function SubscriptionsList() {
   const navigate = useNavigate();
-  const { subscriptions } = useSubscriptions();
+  const { subscriptions, settings } = useSubscriptions();
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -76,7 +77,7 @@ export default function SubscriptionsList() {
                   </TableCell>
                   <TableCell>{sub.category}</TableCell>
                   <TableCell>
-                    ${sub.amount.toFixed(2)} {sub.currency}
+                    {formatCurrency(sub.amount, settings.default_currency)}
                   </TableCell>
                   <TableCell>{sub.billing_frequency}</TableCell>
                   <TableCell>
@@ -121,7 +122,7 @@ export default function SubscriptionsList() {
                 <div>
                   <p className="text-muted-foreground">Amount</p>
                   <p className="font-medium">
-                    ${sub.amount.toFixed(2)} / {sub.billing_frequency.toLowerCase()}
+                    {formatCurrency(sub.amount, settings.default_currency)} / {sub.billing_frequency.toLowerCase()}
                   </p>
                 </div>
                 <div>
