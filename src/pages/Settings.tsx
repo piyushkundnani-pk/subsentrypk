@@ -35,29 +35,29 @@ export default function Settings() {
   const [formData, setFormData] = useState({
     name: user?.user_metadata?.full_name || '',
     email: user?.email || '',
-    defaultCurrency: settings.defaultCurrency,
-    timeZone: settings.timeZone,
-    notificationEmailEnabled: settings.notificationEmailEnabled,
-    monthlySummaryEnabled: settings.monthlySummaryEnabled,
+    default_currency: settings.default_currency,
+    time_zone: settings.time_zone,
+    email_notifications_enabled: settings.email_notifications_enabled,
+    monthly_summary_enabled: settings.monthly_summary_enabled,
   });
 
   useEffect(() => {
     setFormData({
       name: user?.user_metadata?.full_name || '',
       email: user?.email || '',
-      defaultCurrency: settings.defaultCurrency,
-      timeZone: settings.timeZone,
-      notificationEmailEnabled: settings.notificationEmailEnabled,
-      monthlySummaryEnabled: settings.monthlySummaryEnabled,
+      default_currency: settings.default_currency,
+      time_zone: settings.time_zone,
+      email_notifications_enabled: settings.email_notifications_enabled,
+      monthly_summary_enabled: settings.monthly_summary_enabled,
     });
   }, [user, settings]);
 
   const handleSave = () => {
     updateSettings({
-      defaultCurrency: formData.defaultCurrency,
-      timeZone: formData.timeZone,
-      notificationEmailEnabled: formData.notificationEmailEnabled,
-      monthlySummaryEnabled: formData.monthlySummaryEnabled,
+      default_currency: formData.default_currency,
+      time_zone: formData.time_zone,
+      email_notifications_enabled: formData.email_notifications_enabled,
+      monthly_summary_enabled: formData.monthly_summary_enabled,
     });
 
     toast.success('Settings saved successfully');
@@ -71,8 +71,8 @@ export default function Settings() {
         sub.category,
         sub.amount,
         sub.currency,
-        sub.billingFrequency,
-        sub.nextRenewalDate,
+        sub.billing_frequency,
+        sub.next_renewal_date,
         sub.status,
         sub.tag,
       ]),
@@ -148,8 +148,8 @@ export default function Settings() {
               <div>
                 <Label htmlFor="currency">Default Currency</Label>
                 <Select
-                  value={formData.defaultCurrency}
-                  onValueChange={(value) => setFormData({ ...formData, defaultCurrency: value })}
+                  value={formData.default_currency}
+                  onValueChange={(value) => setFormData({ ...formData, default_currency: value })}
                 >
                   <SelectTrigger id="currency">
                     <SelectValue />
@@ -167,8 +167,8 @@ export default function Settings() {
               <div>
                 <Label htmlFor="timezone">Time Zone</Label>
                 <Select
-                  value={formData.timeZone}
-                  onValueChange={(value) => setFormData({ ...formData, timeZone: value })}
+                  value={formData.time_zone}
+                  onValueChange={(value) => setFormData({ ...formData, time_zone: value })}
                 >
                   <SelectTrigger id="timezone">
                     <SelectValue />
@@ -200,9 +200,9 @@ export default function Settings() {
                 </div>
                 <Switch
                   id="email-reminders"
-                  checked={formData.notificationEmailEnabled}
+                  checked={formData.email_notifications_enabled}
                   onCheckedChange={(checked) =>
-                    setFormData({ ...formData, notificationEmailEnabled: checked })
+                    setFormData({ ...formData, email_notifications_enabled: checked })
                   }
                 />
               </div>
@@ -222,9 +222,9 @@ export default function Settings() {
                 </div>
                 <Switch
                   id="monthly-summary"
-                  checked={formData.monthlySummaryEnabled}
+                  checked={formData.monthly_summary_enabled}
                   onCheckedChange={(checked) =>
-                    setFormData({ ...formData, monthlySummaryEnabled: checked })
+                    setFormData({ ...formData, monthly_summary_enabled: checked })
                   }
                   disabled
                 />

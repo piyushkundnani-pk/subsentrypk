@@ -22,7 +22,7 @@ export default function Dashboard() {
     let monthly = 0;
     activeSubscriptions.forEach((sub) => {
       const amount = sub.amount;
-      switch (sub.billingFrequency) {
+      switch (sub.billing_frequency) {
         case 'Weekly':
           monthly += amount * 4.33;
           break;
@@ -36,8 +36,8 @@ export default function Dashboard() {
           monthly += amount / 12;
           break;
         case 'Custom':
-          if (sub.customBillingIntervalDays) {
-            monthly += (amount / sub.customBillingIntervalDays) * 30;
+          if (sub.custom_billing_interval_days) {
+            monthly += (amount / sub.custom_billing_interval_days) * 30;
           }
           break;
       }
@@ -51,12 +51,12 @@ export default function Dashboard() {
 
     return activeSubscriptions
       .filter((sub) => {
-        const renewalDate = new Date(sub.nextRenewalDate);
+        const renewalDate = new Date(sub.next_renewal_date);
         return renewalDate >= today && renewalDate <= thirtyDaysFromNow;
       })
-      .sort((a, b) => new Date(a.nextRenewalDate).getTime() - new Date(b.nextRenewalDate).getTime())
+      .sort((a, b) => new Date(a.next_renewal_date).getTime() - new Date(b.next_renewal_date).getTime())
       .map((sub) => {
-        const renewalDate = new Date(sub.nextRenewalDate);
+        const renewalDate = new Date(sub.next_renewal_date);
         const daysUntil = Math.ceil((renewalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         return { ...sub, daysUntil };
       });

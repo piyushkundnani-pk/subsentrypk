@@ -39,9 +39,9 @@ export default function Setup() {
     category: 'Entertainment',
     amount: '',
     currency: 'USD',
-    billingFrequency: 'Monthly' as Subscription['billingFrequency'],
-    nextRenewalDate: '',
-    paymentMethod: '',
+    billing_frequency: 'Monthly' as Subscription['billing_frequency'],
+    next_renewal_date: '',
+    payment_method: '',
     tag: 'Personal' as Subscription['tag'],
     notes: '',
   });
@@ -55,7 +55,7 @@ export default function Setup() {
   };
 
   const handleAddSubscription = () => {
-    if (!formData.name || !formData.amount || !formData.nextRenewalDate) {
+    if (!formData.name || !formData.amount || !formData.next_renewal_date) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -74,9 +74,9 @@ export default function Setup() {
       category: 'Entertainment',
       amount: '',
       currency: 'USD',
-      billingFrequency: 'Monthly',
-      nextRenewalDate: '',
-      paymentMethod: '',
+      billing_frequency: 'Monthly',
+      next_renewal_date: '',
+      payment_method: '',
       tag: 'Personal',
       notes: '',
     });
@@ -195,11 +195,11 @@ export default function Setup() {
                       <Button
                         key={freq}
                         type="button"
-                        variant={formData.billingFrequency === freq ? 'default' : 'outline'}
+                        variant={formData.billing_frequency === freq ? 'default' : 'outline'}
                         onClick={() =>
                           setFormData({
                             ...formData,
-                            billingFrequency: freq as Subscription['billingFrequency'],
+                            billing_frequency: freq as Subscription['billing_frequency'],
                           })
                         }
                       >
@@ -215,9 +215,9 @@ export default function Setup() {
                     <Input
                       id="renewalDate"
                       type="date"
-                      value={formData.nextRenewalDate}
+                      value={formData.next_renewal_date}
                       onChange={(e) =>
-                        setFormData({ ...formData, nextRenewalDate: e.target.value })
+                        setFormData({ ...formData, next_renewal_date: e.target.value })
                       }
                     />
                   </div>
@@ -226,9 +226,9 @@ export default function Setup() {
                     <Label htmlFor="paymentMethod">Payment Method</Label>
                     <Input
                       id="paymentMethod"
-                      value={formData.paymentMethod}
+                      value={formData.payment_method}
                       onChange={(e) =>
-                        setFormData({ ...formData, paymentMethod: e.target.value })
+                        setFormData({ ...formData, payment_method: e.target.value })
                       }
                       placeholder="Visa •••• 1234"
                     />
@@ -288,11 +288,11 @@ export default function Setup() {
                       <div className="flex-1">
                         <p className="font-medium text-sm">{sub.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          ${sub.amount} / {sub.billingFrequency?.toLowerCase()}
+                        ${sub.amount} / {sub.billing_frequency?.toLowerCase()}
                         </p>
                       </div>
                       <Badge variant="secondary" className="text-xs">
-                        {new Date(sub.nextRenewalDate!).toLocaleDateString('en-US', {
+                        {new Date(sub.next_renewal_date!).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                         })}

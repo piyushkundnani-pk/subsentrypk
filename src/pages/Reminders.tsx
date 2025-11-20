@@ -20,8 +20,8 @@ export default function Reminders() {
   const navigate = useNavigate();
   const { subscriptions, settings, updateSettings, updateSubscription } = useSubscriptions();
   
-  const [globalEnabled, setGlobalEnabled] = useState(settings.globalReminderEnabled);
-  const [globalDays, setGlobalDays] = useState(settings.globalReminderDays.toString());
+  const [globalEnabled, setGlobalEnabled] = useState(settings.global_reminder_enabled);
+  const [globalDays, setGlobalDays] = useState(settings.global_reminder_days_before.toString());
   
   const [overrides, setOverrides] = useState<Record<string, { enabled: boolean; days: string }>>(
     {}
@@ -32,8 +32,8 @@ export default function Reminders() {
     subscriptions.forEach((sub) => {
       if (sub.status === 'Active') {
         initialOverrides[sub.id] = {
-          enabled: sub.overrideReminderEnabled || false,
-          days: sub.overrideReminderDays?.toString() || globalDays,
+          enabled: sub.override_reminder_enabled || false,
+          days: sub.override_reminder_days?.toString() || globalDays,
         };
       }
     });
@@ -42,14 +42,14 @@ export default function Reminders() {
 
   const handleSave = () => {
     updateSettings({
-      globalReminderEnabled: globalEnabled,
-      globalReminderDays: parseInt(globalDays),
+      global_reminder_enabled: globalEnabled,
+      global_reminder_days_before: parseInt(globalDays),
     });
 
     Object.entries(overrides).forEach(([subId, override]) => {
       updateSubscription(subId, {
-        overrideReminderEnabled: override.enabled,
-        overrideReminderDays: override.enabled ? parseInt(override.days) : undefined,
+        override_reminder_enabled: override.enabled,
+        override_reminder_days: override.enabled ? parseInt(override.days) : null,
       });
     });
 
@@ -134,7 +134,7 @@ export default function Reminders() {
                         <p className="font-medium text-foreground">{sub.name}</p>
                         <p className="text-sm text-muted-foreground">
                           Renews on{' '}
-                          {new Date(sub.nextRenewalDate).toLocaleDateString('en-US', {
+                          {new Date(sub.next_renewal_date).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric',

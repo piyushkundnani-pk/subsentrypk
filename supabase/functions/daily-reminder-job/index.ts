@@ -11,6 +11,16 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Verify cron secret for security
+  const cronSecret = req.headers.get('X-Cron-Secret');
+  if (cronSecret !== Deno.env.get('CRON_SECRET')) {
+    console.error('Unauthorized access attempt to daily-reminder-job');
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     console.log('Starting daily reminder job...');
 
