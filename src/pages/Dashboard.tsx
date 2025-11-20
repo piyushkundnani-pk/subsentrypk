@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSubscriptions } from '@/contexts/SubscriptionContext';
+import { formatCurrency } from '@/lib/currency';
 
 const filterTags = ['All', 'Personal', 'Work', 'Family', 'High-cost'];
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { subscriptions } = useSubscriptions();
+  const { subscriptions, settings } = useSubscriptions();
 
   const activeSubscriptions = useMemo(
     () => subscriptions.filter((sub) => sub.status === 'Active'),
@@ -88,7 +89,7 @@ export default function Dashboard() {
               </div>
               <h3 className="text-sm font-medium text-muted-foreground">Monthly Spend</h3>
             </div>
-            <p className="text-3xl font-bold text-primary">${monthlySpend.toFixed(2)}</p>
+            <p className="text-3xl font-bold text-primary">{formatCurrency(monthlySpend, settings.default_currency)}</p>
           </Card>
 
           <Card className="p-6">
@@ -98,7 +99,7 @@ export default function Dashboard() {
               </div>
               <h3 className="text-sm font-medium text-muted-foreground">Annual Spend</h3>
             </div>
-            <p className="text-3xl font-bold text-primary">${annualSpend.toFixed(2)}</p>
+            <p className="text-3xl font-bold text-primary">{formatCurrency(annualSpend, settings.default_currency)}</p>
           </Card>
 
           <Card className="p-6">
@@ -157,7 +158,7 @@ export default function Dashboard() {
                         <h4 className="font-semibold text-foreground">{sub.name}</h4>
                         <div className="flex items-center gap-2 mt-1">
                           <p className="text-sm text-muted-foreground">Amount</p>
-                          <p className="text-sm font-medium">${sub.amount.toFixed(2)}</p>
+                          <p className="text-sm font-medium">{formatCurrency(sub.amount, settings.default_currency)}</p>
                         </div>
                       </div>
                     </div>

@@ -15,6 +15,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { useSubscriptions, Subscription } from '@/contexts/SubscriptionContext';
 import { toast } from 'sonner';
+import { getCurrencySymbol } from '@/lib/currency';
 
 const categories = ['Entertainment', 'Shopping', 'Storage', 'Health & Fitness', 'Software', 'Utilities', 'Other'];
 const billingFrequencies = ['Monthly', 'Yearly', 'Weekly', 'Quarterly', 'Custom'];
@@ -22,7 +23,7 @@ const billingFrequencies = ['Monthly', 'Yearly', 'Weekly', 'Quarterly', 'Custom'
 export default function AddEditSubscription() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { subscriptions, addSubscription, updateSubscription } = useSubscriptions();
+  const { subscriptions, addSubscription, updateSubscription, settings } = useSubscriptions();
   const isEdit = !!id;
 
   const [formData, setFormData] = useState({
@@ -168,7 +169,7 @@ export default function AddEditSubscription() {
                     <Label htmlFor="amount">Amount</Label>
                     <div className="flex gap-2">
                       <span className="inline-flex items-center px-3 bg-muted border border-r-0 border-input rounded-l-md text-muted-foreground">
-                        $
+                        {getCurrencySymbol(settings.default_currency)}
                       </span>
                       <Input
                         id="amount"

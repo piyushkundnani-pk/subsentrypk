@@ -6,11 +6,12 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSubscriptions } from '@/contexts/SubscriptionContext';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/currency';
 
 export default function SubscriptionDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { subscriptions, updateSubscription } = useSubscriptions();
+  const { subscriptions, updateSubscription, settings } = useSubscriptions();
 
   const subscription = useMemo(
     () => subscriptions.find((sub) => sub.id === id),
@@ -110,7 +111,7 @@ export default function SubscriptionDetail() {
               <div className="space-y-4">
                 <div>
                   <p className="text-3xl font-bold text-foreground">
-                    ${subscription.amount.toFixed(2)}
+                    {formatCurrency(subscription.amount, settings.default_currency)}
                     <span className="text-sm font-normal text-muted-foreground">
                       {' '}
                       / {subscription.billing_frequency.toLowerCase()}
@@ -119,7 +120,7 @@ export default function SubscriptionDetail() {
                 </div>
                 <div className="pt-4 border-t border-border">
                   <p className="text-sm text-muted-foreground">Annualized cost</p>
-                  <p className="text-xl font-semibold">${annualizedCost.toFixed(2)}</p>
+                  <p className="text-xl font-semibold">{formatCurrency(annualizedCost, settings.default_currency)}</p>
                 </div>
                 <div className="pt-4 border-t border-border">
                   <p className="text-sm text-muted-foreground">Paid with</p>
@@ -178,7 +179,7 @@ export default function SubscriptionDetail() {
                     className="flex items-center justify-between py-2 border-b border-border last:border-0"
                   >
                     <p className="text-foreground">{renewal.date}</p>
-                    <p className="font-semibold">${renewal.amount.toFixed(2)}</p>
+                    <p className="font-semibold">{formatCurrency(renewal.amount, settings.default_currency)}</p>
                   </div>
                 ))}
               </div>
