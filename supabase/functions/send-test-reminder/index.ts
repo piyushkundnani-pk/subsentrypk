@@ -140,7 +140,7 @@ serve(async (req) => {
             'Authorization': `Bearer ${RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: "onboarding@resend.dev",
+            from: "SubSentry <reminders@subsentry.app>",
             to: [profile.email],
             subject: `[TEST] Reminder: ${subscription.name} renews ${daysUntil === 0 ? 'today' : daysUntil < 0 ? 'soon' : `in ${daysUntil} days`}`,
             html: emailHtml,
