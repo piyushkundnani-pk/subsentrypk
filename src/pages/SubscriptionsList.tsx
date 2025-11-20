@@ -78,9 +78,9 @@ export default function SubscriptionsList() {
                   <TableCell>
                     ${sub.amount.toFixed(2)} {sub.currency}
                   </TableCell>
-                  <TableCell>{sub.billingFrequency}</TableCell>
+                  <TableCell>{sub.billing_frequency}</TableCell>
                   <TableCell>
-                    {new Date(sub.nextRenewalDate).toLocaleDateString('en-US', {
+                    {new Date(sub.next_renewal_date).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
@@ -121,13 +121,13 @@ export default function SubscriptionsList() {
                 <div>
                   <p className="text-muted-foreground">Amount</p>
                   <p className="font-medium">
-                    ${sub.amount.toFixed(2)} / {sub.billingFrequency.toLowerCase()}
+                    ${sub.amount.toFixed(2)} / {sub.billing_frequency.toLowerCase()}
                   </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Next Renewal</p>
                   <p className="font-medium">
-                    {new Date(sub.nextRenewalDate).toLocaleDateString('en-US', {
+                    {new Date(sub.next_renewal_date).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                     })}

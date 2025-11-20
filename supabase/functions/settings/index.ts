@@ -1,10 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const settingsSchema = z.object({
+  default_currency: z.string().length(3).optional(),
+  time_zone: z.string().max(50).optional(),
+  email_notifications_enabled: z.boolean().optional(),
+  global_reminder_enabled: z.boolean().optional(),
+  global_reminder_days_before: z.number().int().min(1).max(90).optional(),
+  monthly_summary_enabled: z.boolean().optional(),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -51,6 +61,18 @@ serve(async (req) => {
     // PUT /settings - Update user settings
     if (req.method === 'PUT') {
       const body = await req.json();
+      
+      // Validate input
+      try {
+        settingsSchema.parse(body);
+      } catch (validationError) {
+        if (validationError instanceof z.ZodError) {
+          return new Response(JSON.stringify({ error: 'Invalid input', details: validationError.errors }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
       
       const { data, error } = await supabaseClient
         .from('user_settings')

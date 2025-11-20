@@ -1,10 +1,30 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const subscriptionSchema = z.object({
+  name: z.string().min(1).max(100),
+  category: z.string().min(1).max(50),
+  amount: z.number().positive(),
+  currency: z.string().length(3),
+  billing_frequency: z.enum(['Weekly', 'Monthly', 'Quarterly', 'Yearly', 'Custom']),
+  custom_billing_interval_days: z.number().int().positive().optional().nullable(),
+  next_renewal_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  status: z.enum(['Active', 'Cancelled', 'Paused']).optional(),
+  tag: z.enum(['Personal', 'Work', 'Family']).optional(),
+  payment_method: z.string().max(50).optional().nullable(),
+  icon: z.string().max(200).optional().nullable(),
+  notes: z.string().max(1000).optional().nullable(),
+  override_reminder_enabled: z.boolean().optional().nullable(),
+  override_reminder_days: z.number().int().min(1).max(90).optional().nullable(),
+});
+
+const subscriptionUpdateSchema = subscriptionSchema.partial();
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -84,6 +104,18 @@ serve(async (req) => {
     if (req.method === 'POST') {
       const body = await req.json();
       
+      // Validate input
+      try {
+        subscriptionSchema.parse(body);
+      } catch (validationError) {
+        if (validationError instanceof z.ZodError) {
+          return new Response(JSON.stringify({ error: 'Invalid input', details: validationError.errors }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      
       const { data, error } = await supabaseClient
         .from('subscriptions')
         .insert([{ ...body, user_id: user.id }])
@@ -101,6 +133,18 @@ serve(async (req) => {
     // PUT /subscriptions/:id - Update subscription
     if (req.method === 'PUT' && subscriptionId) {
       const body = await req.json();
+      
+      // Validate input
+      try {
+        subscriptionUpdateSchema.parse(body);
+      } catch (validationError) {
+        if (validationError instanceof z.ZodError) {
+          return new Response(JSON.stringify({ error: 'Invalid input', details: validationError.errors }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
       
       const { data, error } = await supabaseClient
         .from('subscriptions')

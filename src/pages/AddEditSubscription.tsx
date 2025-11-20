@@ -30,10 +30,10 @@ export default function AddEditSubscription() {
     category: 'Entertainment',
     amount: '',
     currency: 'USD',
-    billingFrequency: 'Monthly' as Subscription['billingFrequency'],
-    customBillingIntervalDays: '',
-    nextRenewalDate: '',
-    paymentMethod: '',
+    billing_frequency: 'Monthly' as Subscription['billing_frequency'],
+    custom_billing_interval_days: '',
+    next_renewal_date: '',
+    payment_method: '',
     tag: 'Personal' as Subscription['tag'],
     notes: '',
     status: 'Active' as Subscription['status'],
@@ -49,12 +49,12 @@ export default function AddEditSubscription() {
           category: sub.category,
           amount: sub.amount.toString(),
           currency: sub.currency,
-          billingFrequency: sub.billingFrequency,
-          customBillingIntervalDays: sub.customBillingIntervalDays?.toString() || '',
-          nextRenewalDate: sub.nextRenewalDate,
-          paymentMethod: sub.paymentMethod,
+          billing_frequency: sub.billing_frequency,
+          custom_billing_interval_days: sub.custom_billing_interval_days?.toString() || '',
+          next_renewal_date: sub.next_renewal_date,
+          payment_method: sub.payment_method || '',
           tag: sub.tag,
-          notes: sub.notes,
+          notes: sub.notes || '',
           status: sub.status,
           icon: sub.icon || '📦',
         });
@@ -65,7 +65,7 @@ export default function AddEditSubscription() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.amount || !formData.nextRenewalDate) {
+    if (!formData.name || !formData.amount || !formData.next_renewal_date) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -75,14 +75,14 @@ export default function AddEditSubscription() {
       category: formData.category,
       amount: parseFloat(formData.amount),
       currency: formData.currency,
-      billingFrequency: formData.billingFrequency,
-      customBillingIntervalDays: formData.customBillingIntervalDays
-        ? parseInt(formData.customBillingIntervalDays)
-        : undefined,
-      nextRenewalDate: formData.nextRenewalDate,
-      paymentMethod: formData.paymentMethod,
+      billing_frequency: formData.billing_frequency,
+      custom_billing_interval_days: formData.custom_billing_interval_days
+        ? parseInt(formData.custom_billing_interval_days)
+        : null,
+      next_renewal_date: formData.next_renewal_date,
+      payment_method: formData.payment_method || null,
       tag: formData.tag,
-      notes: formData.notes,
+      notes: formData.notes || null,
       status: formData.status,
       icon: formData.icon,
     };
@@ -193,11 +193,11 @@ export default function AddEditSubscription() {
                         <Button
                           key={freq}
                           type="button"
-                          variant={formData.billingFrequency === freq ? 'default' : 'outline'}
+                          variant={formData.billing_frequency === freq ? 'default' : 'outline'}
                           onClick={() =>
                             setFormData({
                               ...formData,
-                              billingFrequency: freq as Subscription['billingFrequency'],
+                              billing_frequency: freq as Subscription['billing_frequency'],
                             })
                           }
                           className="text-xs"
@@ -209,15 +209,15 @@ export default function AddEditSubscription() {
                   </div>
                 </div>
 
-                {formData.billingFrequency === 'Custom' && (
+                {formData.billing_frequency === 'Custom' && (
                   <div>
                     <Label htmlFor="customDays">Custom Billing Interval (days)</Label>
                     <Input
                       id="customDays"
                       type="number"
-                      value={formData.customBillingIntervalDays}
+                      value={formData.custom_billing_interval_days}
                       onChange={(e) =>
-                        setFormData({ ...formData, customBillingIntervalDays: e.target.value })
+                        setFormData({ ...formData, custom_billing_interval_days: e.target.value })
                       }
                       placeholder="e.g., 45"
                     />
@@ -230,9 +230,9 @@ export default function AddEditSubscription() {
                     <Input
                       id="renewalDate"
                       type="date"
-                      value={formData.nextRenewalDate}
+                      value={formData.next_renewal_date}
                       onChange={(e) =>
-                        setFormData({ ...formData, nextRenewalDate: e.target.value })
+                        setFormData({ ...formData, next_renewal_date: e.target.value })
                       }
                       required
                     />
@@ -242,9 +242,9 @@ export default function AddEditSubscription() {
                     <Label htmlFor="paymentMethod">Payment Method</Label>
                     <Input
                       id="paymentMethod"
-                      value={formData.paymentMethod}
+                      value={formData.payment_method}
                       onChange={(e) =>
-                        setFormData({ ...formData, paymentMethod: e.target.value })
+                        setFormData({ ...formData, payment_method: e.target.value })
                       }
                       placeholder="Visa •••• 1234"
                     />

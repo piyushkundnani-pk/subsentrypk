@@ -33,7 +33,7 @@ export default function SubscriptionDetail() {
 
   const annualizedCost = useMemo(() => {
     const amount = subscription.amount;
-    switch (subscription.billingFrequency) {
+    switch (subscription.billing_frequency) {
       case 'Weekly':
         return amount * 52;
       case 'Monthly':
@@ -43,8 +43,8 @@ export default function SubscriptionDetail() {
       case 'Yearly':
         return amount;
       case 'Custom':
-        if (subscription.customBillingIntervalDays) {
-          return (amount / subscription.customBillingIntervalDays) * 365;
+        if (subscription.custom_billing_interval_days) {
+          return (amount / subscription.custom_billing_interval_days) * 365;
         }
         return 0;
       default:
@@ -66,7 +66,7 @@ export default function SubscriptionDetail() {
   ];
 
   const daysUntilRenewal = Math.ceil(
-    (new Date(subscription.nextRenewalDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+    (new Date(subscription.next_renewal_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
   );
 
   return (
@@ -113,7 +113,7 @@ export default function SubscriptionDetail() {
                     ${subscription.amount.toFixed(2)}
                     <span className="text-sm font-normal text-muted-foreground">
                       {' '}
-                      / {subscription.billingFrequency.toLowerCase()}
+                      / {subscription.billing_frequency.toLowerCase()}
                     </span>
                   </p>
                 </div>
@@ -123,7 +123,7 @@ export default function SubscriptionDetail() {
                 </div>
                 <div className="pt-4 border-t border-border">
                   <p className="text-sm text-muted-foreground">Paid with</p>
-                  <p className="text-sm font-medium">{subscription.paymentMethod}</p>
+                  <p className="text-sm font-medium">{subscription.payment_method || 'Not set'}</p>
                 </div>
               </div>
             </Card>
@@ -131,7 +131,7 @@ export default function SubscriptionDetail() {
             <Card className="p-6 bg-warning-muted border-warning">
               <h3 className="text-sm font-semibold mb-2 text-warning-foreground">
                 Renews on{' '}
-                {new Date(subscription.nextRenewalDate).toLocaleDateString('en-US', {
+                {new Date(subscription.next_renewal_date).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',
