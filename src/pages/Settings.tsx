@@ -18,7 +18,12 @@ import { useSubscriptions } from '@/contexts/SubscriptionContext';
 import { toast } from 'sonner';
 import { Download } from 'lucide-react';
 
-const currencies = ['USD - United States Dollar', 'INR - Indian Rupee', 'EUR - Euro', 'GBP - British Pound'];
+const currencies = [
+  { code: 'USD', label: 'USD - United States Dollar' },
+  { code: 'INR', label: 'INR - Indian Rupee' },
+  { code: 'EUR', label: 'EUR - Euro' },
+  { code: 'GBP', label: 'GBP - British Pound' },
+];
 const timeZones = [
   '(GMT-05:00) Eastern Time',
   '(GMT-06:00) Central Time',
@@ -32,10 +37,15 @@ export default function Settings() {
   const { user } = useAuth();
   const { settings, updateSettings, subscriptions } = useSubscriptions();
   
+  // Extract currency code if it's in "CODE - Name" format
+  const extractCurrencyCode = (currency: string) => {
+    return currency?.split(' ')[0]?.trim() || 'USD';
+  };
+
   const [formData, setFormData] = useState({
     name: user?.user_metadata?.full_name || '',
     email: user?.email || '',
-    default_currency: settings.default_currency,
+    default_currency: extractCurrencyCode(settings.default_currency),
     time_zone: settings.time_zone,
     email_notifications_enabled: settings.email_notifications_enabled,
     monthly_summary_enabled: settings.monthly_summary_enabled,
@@ -45,7 +55,7 @@ export default function Settings() {
     setFormData({
       name: user?.user_metadata?.full_name || '',
       email: user?.email || '',
-      default_currency: settings.default_currency,
+      default_currency: extractCurrencyCode(settings.default_currency),
       time_zone: settings.time_zone,
       email_notifications_enabled: settings.email_notifications_enabled,
       monthly_summary_enabled: settings.monthly_summary_enabled,
@@ -156,8 +166,8 @@ export default function Settings() {
                   </SelectTrigger>
                   <SelectContent>
                     {currencies.map((currency) => (
-                      <SelectItem key={currency} value={currency}>
-                        {currency}
+                      <SelectItem key={currency.code} value={currency.code}>
+                        {currency.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

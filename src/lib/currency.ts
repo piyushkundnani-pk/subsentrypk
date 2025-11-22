@@ -14,9 +14,9 @@ const currencyMap: Record<string, CurrencyInfo> = {
 };
 
 export function getCurrencyInfo(currencyString: string): CurrencyInfo {
-  // Handle formats like "USD - United States Dollar" or just "USD"
-  const code = currencyString.split(' ')[0].trim();
-  return currencyMap[code] || currencyMap['INR'];
+  // Handle formats like "USD - United States Dollar", "USD", or legacy full strings
+  const code = currencyString?.split(' ')[0]?.trim()?.toUpperCase() || 'USD';
+  return currencyMap[code] || currencyMap['USD'];
 }
 
 export function formatCurrency(amount: number, currencyString: string): string {

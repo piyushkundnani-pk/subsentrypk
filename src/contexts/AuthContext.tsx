@@ -18,33 +18,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    
     if (import.meta.env.DEV) {
       console.log('[AuthContext] Initializing auth state');
     }
     
-    // Set up auth state listener FIRST
+    // Check for existing session immediately
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (!mounted) return;
+      
+      if (error) {
+        console.error('[AuthContext] Error getting session:', error);
+      }
+      
+      if (import.meta.env.DEV) {
+        console.log('[AuthContext] Initial session check:', !!session);
+      }
+      
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    // Set up auth state listener for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        if (!mounted) return;
+        
         if (import.meta.env.DEV) {
           console.log('[AuthContext] Auth state changed:', event, 'Session exists:', !!session);
         }
+        
+        // For sign-in events, wait a moment to ensure backend sync
+        if (event === 'SIGNED_IN' && session) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (import.meta.env.DEV) {
-        console.log('[AuthContext] Initial session check:', !!session);
-      }
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const logout = async () => {
