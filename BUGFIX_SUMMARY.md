@@ -1,7 +1,57 @@
 # Global Bugfix Summary - SubSentry
 
 ## Overview
-This document details the comprehensive fixes applied to resolve authentication loops, currency inconsistencies, onboarding flow issues, and reminder functionality problems.
+This document details the comprehensive fixes applied to resolve authentication loops, currency inconsistencies, onboarding flow issues, reminder functionality, mobile navigation, and renewal history display problems.
+
+---
+
+## Latest Fixes (Mobile Navigation & Renewal History)
+
+### 5. Mobile Navigation Missing
+
+#### Problem
+On mobile viewports, the Subscriptions navigation link was not visible. Users could only see the Dashboard screen with no way to navigate to Subscriptions list, Calendar, or other sections.
+
+#### Files Changed
+- `src/components/Header.tsx`
+
+#### Changes Made
+- **Added hamburger menu**: Sheet component that opens from left side on mobile
+- **Mobile-only button**: Menu icon (☰) visible only on screens < 768px
+- **Full navigation access**: Mobile menu includes all nav items (Dashboard, Subscriptions, Calendar)
+- **Quick actions**: Added Reminders, Settings, and Logout buttons in mobile menu
+- **Active state highlighting**: Current page highlighted with primary background
+- **Auto-close**: Menu automatically closes after navigation
+- **Desktop unchanged**: Desktop navigation bar remains as before
+
+#### Expected Behavior
+- On mobile, hamburger menu button appears in header
+- Tapping menu reveals all navigation options
+- Users can access Subscriptions, Calendar, Settings from mobile
+- Menu closes automatically after selection
+- Desktop navigation unchanged
+
+---
+
+### 6. Bogus Renewal History for New Subscriptions
+
+#### Problem
+New subscriptions displayed hardcoded historical renewal dates (September 2024, August 2024, July 2024) that predated the subscription's creation, making it look like the subscription existed before it was created.
+
+#### Files Changed
+- `src/pages/SubscriptionDetail.tsx`
+
+#### Changes Made
+- **Removed mock data**: Deleted hardcoded `renewalHistory` array with fake dates
+- **Removed history section**: Entirely removed "Renewal History" card from subscription detail page
+- **Added comment**: Documented that renewal history will be implemented when we track actual renewals
+- **Clean detail page**: Subscription detail now only shows real, accurate information
+
+#### Expected Behavior
+- New subscriptions show no renewal history (since they're new)
+- No fake backdated renewal entries
+- Subscription detail page displays only actual subscription data
+- Future: Real renewal history will be tracked and displayed when implemented
 
 ---
 
