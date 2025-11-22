@@ -34,11 +34,9 @@ const ONBOARDING_GOAL = 3;
 export default function Setup() {
   const navigate = useNavigate();
   const { addSubscription, subscriptions } = useSubscriptions();
-  const [addedSubs, setAddedSubs] = useState<Partial<Subscription>[]>([]);
   
-  // Track total count including existing subscriptions
+  // Track total count of active subscriptions
   const activeSubsCount = subscriptions.filter(s => s.status === 'Active').length;
-  const totalCount = activeSubsCount + addedSubs.length;
   
   const [formData, setFormData] = useState({
     name: '',
@@ -72,7 +70,6 @@ export default function Setup() {
       status: 'Active' as const,
     };
 
-    // Save to backend immediately
     try {
       await addSubscription(newSub as Omit<Subscription, 'id' | 'createdAt'>);
       
@@ -90,17 +87,21 @@ export default function Setup() {
       });
 
       toast.success(`${newSub.name} added!`);
-      
-      // Check if we've reached the goal (account for newly added sub)
-      const newTotalCount = subscriptions.filter(s => s.status === 'Active').length + 1;
-      if (newTotalCount >= ONBOARDING_GOAL) {
-        toast.success('Great! You\'ve added your first subscriptions. Redirecting to dashboard...');
-        setTimeout(() => navigate('/dashboard'), 1500);
-      }
     } catch (error) {
       toast.error('Failed to add subscription. Please try again.');
     }
   };
+
+  // Auto-redirect when goal is reached
+  useEffect(() => {
+    if (activeSubsCount >= ONBOARDING_GOAL) {
+      toast.success('Great! You\'ve added your first subscriptions. Redirecting to dashboard...');
+      const timer = setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [activeSubsCount, navigate]);
 
   const handleContinue = () => {
     // All subs are already saved, just navigate
@@ -124,7 +125,7 @@ export default function Setup() {
               Start by logging the subscriptions you care about most. You can add more later from the dashboard.
             </p>
             <Badge variant="secondary" className="text-sm font-semibold">
-              {totalCount} of {ONBOARDING_GOAL} added
+              {activeSubsCount} of {ONBOARDING_GOAL} added
             </Badge>
           </div>
         </div>
@@ -290,12 +291,12 @@ export default function Setup() {
             <Card className="p-6 sticky top-8">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold">Your subscriptions</h3>
-                <Badge variant={totalCount >= ONBOARDING_GOAL ? 'default' : 'secondary'}>
-                  {totalCount}/{ONBOARDING_GOAL}
+                <Badge variant={activeSubsCount >= ONBOARDING_GOAL ? 'default' : 'secondary'}>
+                  {activeSubsCount}/{ONBOARDING_GOAL}
                 </Badge>
               </div>
               
-              {totalCount === 0 ? (
+              {activeSubsCount === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No subscriptions added yet. Start by selecting a popular service or adding one manually.
                 </p>
@@ -326,7 +327,7 @@ export default function Setup() {
                 </div>
               )}
               
-              {totalCount >= ONBOARDING_GOAL && (
+              {activeSubsCount >= ONBOARDING_GOAL && (
                 <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded-lg">
                   <p className="text-sm text-primary font-medium">
                     ✓ Goal reached! You can add more or continue to dashboard.
@@ -343,7 +344,7 @@ export default function Setup() {
           </Button>
           <Button
             onClick={handleContinue}
-            disabled={totalCount === 0}
+            disabled={activeSubsCount === 0}
             size="lg"
           >
             Continue to dashboard
