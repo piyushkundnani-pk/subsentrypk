@@ -59,12 +59,7 @@ export default function SubscriptionDetail() {
     toast.success(`Subscription marked as ${newStatus.toLowerCase()}`);
   };
 
-  // Mock renewal history
-  const renewalHistory = [
-    { date: 'September 25, 2024', amount: subscription.amount },
-    { date: 'August 25, 2024', amount: subscription.amount },
-    { date: 'July 25, 2024', amount: subscription.amount },
-  ];
+  // No renewal history for MVP - will be implemented when we track actual renewals
 
   const daysUntilRenewal = Math.ceil(
     (new Date(subscription.next_renewal_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
@@ -168,22 +163,6 @@ export default function SubscriptionDetail() {
               </div>
             </Card>
 
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 text-muted-foreground uppercase text-sm">
-                Renewal History
-              </h3>
-              <div className="space-y-3">
-                {renewalHistory.map((renewal, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                  >
-                    <p className="text-foreground">{renewal.date}</p>
-                    <p className="font-semibold">{formatCurrency(renewal.amount, settings.default_currency)}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
 
             <Card className="p-6 bg-muted/50">
               <div className="flex items-start gap-4">
