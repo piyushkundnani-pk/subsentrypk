@@ -71,6 +71,19 @@ export default function AddEditSubscription() {
       return;
     }
 
+    // Validate next_renewal_date is not in the past for active subscriptions
+    if (formData.status === 'Active') {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const renewalDate = new Date(formData.next_renewal_date);
+      renewalDate.setHours(0, 0, 0, 0);
+      
+      if (renewalDate < today) {
+        toast.error('Next renewal date must be today or in the future for active subscriptions');
+        return;
+      }
+    }
+
     const subData = {
       name: formData.name,
       category: formData.category,

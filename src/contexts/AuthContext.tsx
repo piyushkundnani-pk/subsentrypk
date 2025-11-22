@@ -24,24 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('[AuthContext] Initializing auth state');
     }
     
-    // Check for existing session immediately
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (!mounted) return;
-      
-      if (error) {
-        console.error('[AuthContext] Error getting session:', error);
-      }
-      
-      if (import.meta.env.DEV) {
-        console.log('[AuthContext] Initial session check:', !!session);
-      }
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
-
-    // Set up auth state listener for changes
+    // Set up auth state listener FIRST to catch all events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
@@ -60,6 +43,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
       }
     );
+
+    // THEN check for existing session
+    const initAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('[AuthContext] Error getting session:', error);
+        }
+        
+        if (import.meta.env.DEV) {
+          console.log('[AuthContext] Initial session check:', !!session);
+        }
+        
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('[AuthContext] Error in initAuth:', error);
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initAuth();
 
     return () => {
       mounted = false;

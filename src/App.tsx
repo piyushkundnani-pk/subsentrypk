@@ -15,6 +15,7 @@ import AddEditSubscription from "./pages/AddEditSubscription";
 import SubscriptionDetail from "./pages/SubscriptionDetail";
 import Reminders from "./pages/Reminders";
 import Settings from "./pages/Settings";
+import CleanupRenewals from "./pages/CleanupRenewals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Settings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/cleanup-renewals"
+                element={
+                  <ProtectedRoute>
+                    <CleanupRenewals />
                   </ProtectedRoute>
                 }
               />

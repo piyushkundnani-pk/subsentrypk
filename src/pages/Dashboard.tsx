@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, TrendingUp, Calendar, Layers } from 'lucide-react';
 import { Header } from '@/components/Header';
@@ -13,6 +13,7 @@ const filterTags = ['All', 'Personal', 'Work', 'Family', 'High-cost'];
 export default function Dashboard() {
   const navigate = useNavigate();
   const { subscriptions, settings } = useSubscriptions();
+  const [activeTag, setActiveTag] = useState('All');
 
   const activeSubscriptions = useMemo(
     () => subscriptions.filter((sub) => sub.status === 'Active'),
@@ -50,18 +51,31 @@ export default function Dashboard() {
     const today = new Date();
     const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    return activeSubscriptions
+    let filtered = activeSubscriptions
       .filter((sub) => {
         const renewalDate = new Date(sub.next_renewal_date);
         return renewalDate >= today && renewalDate <= thirtyDaysFromNow;
-      })
+      });
+
+    // Apply tag filter
+    if (activeTag !== 'All') {
+      if (activeTag === 'High-cost') {
+        // Filter for subscriptions with amount > 50 (in their currency)
+        filtered = filtered.filter((sub) => sub.amount > 50);
+      } else {
+        // Filter by tag (Personal, Work, Family)
+        filtered = filtered.filter((sub) => sub.tag === activeTag);
+      }
+    }
+
+    return filtered
       .sort((a, b) => new Date(a.next_renewal_date).getTime() - new Date(b.next_renewal_date).getTime())
       .map((sub) => {
         const renewalDate = new Date(sub.next_renewal_date);
         const daysUntil = Math.ceil((renewalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         return { ...sub, daysUntil };
       });
-  }, [activeSubscriptions]);
+  }, [activeSubscriptions, activeTag]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -118,7 +132,12 @@ export default function Dashboard() {
             <h2 className="text-2xl font-bold text-foreground mb-4">Upcoming Renewals</h2>
             <div className="flex flex-wrap gap-2">
               {filterTags.map((tag) => (
-                <Badge key={tag} variant={tag === 'All' ? 'default' : 'outline'} className="cursor-pointer">
+                <Badge
+                  key={tag}
+                  variant={tag === activeTag ? 'default' : 'outline'}
+                  className="cursor-pointer transition-colors hover:bg-primary/80"
+                  onClick={() => setActiveTag(tag)}
+                >
                   {tag}
                 </Badge>
               ))}

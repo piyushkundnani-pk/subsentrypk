@@ -1,11 +1,109 @@
 # Global Bugfix Summary - SubSentry
 
 ## Overview
-This document details the comprehensive fixes applied to resolve authentication loops, currency inconsistencies, onboarding flow issues, reminder functionality, mobile navigation, and renewal history display problems.
+This document details the comprehensive fixes applied to resolve authentication loops, currency inconsistencies, onboarding flow issues, reminder functionality, mobile navigation, renewal history display problems, tag filtering, mobile session persistence, and renewal date validation.
 
 ---
 
-## Latest Fixes (Mobile Navigation & Renewal History)
+## Latest Fixes (Tag Filtering, Mobile Sessions, Renewal Date Validation)
+
+### 7. Dashboard Tag Chips Interactivity
+
+#### Problem
+Tag filter chips (All, Personal, Work, Family, High-cost) on the Dashboard were not clickable and did not filter the renewals list.
+
+#### Files Changed
+- `src/pages/Dashboard.tsx`
+
+#### Changes Made
+- **Added activeTag state**: Tracks which filter is currently selected
+- **Added onClick handlers**: Made Badge components interactive buttons
+- **Implemented filter logic**: 
+  - "All" shows all upcoming renewals
+  - "Personal", "Work", "Family" filter by subscription tag
+  - "High-cost" filters subscriptions with amount > 50
+- **Enhanced styling**: Added hover effects and pointer cursor
+- **Updated useMemo dependency**: Filter reruns when activeTag changes
+
+#### Expected Behavior
+- Clicking a tag chip updates the renewals list
+- Active tag has primary styling
+- Other tags have outline styling
+- List filters correctly for each tag selection
+
+---
+
+### 8. Mobile Session Persistence
+
+#### Problem
+On mobile devices, when users backgrounded the app or switched to another app, they were logged out upon returning.
+
+#### Files Changed
+- `src/contexts/AuthContext.tsx`
+
+#### Changes Made
+- **Reordered initialization**: Set up `onAuthStateChange` listener FIRST, then check for existing session
+- **Ensured event capture**: All auth state changes are captured before we check initial session
+- **Improved error handling**: Better try-catch in session initialization
+- **Maintained mounted flag**: Prevents race conditions and updates after unmount
+- **Kept sync delay**: 500ms delay for SIGNED_IN events ensures backend synchronization
+
+#### Expected Behavior
+- Users stay logged in when backgrounding/foregrounding app
+- Session persists across tab reloads
+- Only logs out on explicit logout or actual session expiry
+- Works consistently on mobile Safari and Chrome
+
+---
+
+### 9. Next Renewal Date Validation & Stale Data Cleanup
+
+#### Problem
+- Users could set past dates as "Next renewal date" in forms
+- Existing subscriptions with past dates displayed "Due in -X days"
+- Stale historical data needed cleanup
+
+#### Files Changed
+- `src/pages/AddEditSubscription.tsx` - Form validation
+- `supabase/functions/cleanup-stale-renewals/index.ts` - Edge function (NEW)
+- `src/pages/CleanupRenewals.tsx` - Admin UI (NEW)
+- `src/App.tsx` - Added cleanup route
+
+#### Changes Made
+
+**A) Form Validation:**
+- Added validation in `handleSubmit` to check if renewal date is in the past
+- Only applies to active subscriptions (allows past dates for Cancelled/Paused)
+- Shows error: "Next renewal date must be today or in the future for active subscriptions"
+- Prevents future stale data from being created
+
+**B) Stale Data Cleanup Edge Function:**
+- Created `/cleanup-stale-renewals` edge function
+- Fetches all active subscriptions with `next_renewal_date < today`
+- Calculates next future date based on `billing_frequency`:
+  - Weekly: +7 days repeatedly until future
+  - Monthly: +30 days repeatedly until future
+  - Quarterly: +90 days repeatedly until future
+  - Yearly: +365 days repeatedly until future
+  - Custom: Uses `custom_billing_interval_days`
+- Updates all stale subscriptions in bulk
+- Requires authentication (user must be logged in)
+
+**C) Admin Cleanup Page:**
+- Created `/cleanup-renewals` route and page
+- Provides button to trigger cleanup
+- Shows results: number of subscriptions updated
+- Accessible to all authenticated users
+
+#### Expected Behavior
+- **New subscriptions**: Cannot save with past renewal date (if active)
+- **Existing subscriptions**: After running cleanup, all have future dates
+- **Dashboard**: Shows only positive "Due in X days" values
+- **Display**: No more negative day counts or confusing past dates
+
+---
+
+## Previous Fixes (Mobile Navigation & Renewal History)
 
 ### 5. Mobile Navigation Missing
 
@@ -203,6 +301,11 @@ Ensure these are set in production:
 - [ ] Currency selection persists and displays everywhere
 - [ ] New user onboarding counts correctly and auto-redirects
 - [ ] Test reminder button visible and functional
+- [ ] Mobile navigation accessible via hamburger menu
+- [ ] Dashboard tag chips filter correctly
+- [ ] Mobile session persists when backgrounding app
+- [ ] Form rejects past renewal dates for active subscriptions
+- [ ] Cleanup function updates stale renewal dates
 - [ ] All tests done in fresh incognito session
 
 ---
