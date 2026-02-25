@@ -33,7 +33,7 @@ This project is built with:
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/aeb697fc-f394-4f27-8341-8bd13a359aea
+**URL**: https://subsentry-pk-apps.com/
 
 ## How can I edit this code?
 
