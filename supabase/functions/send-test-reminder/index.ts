@@ -128,6 +128,7 @@ serve(async (req) => {
         // Calculate days until renewal
         // Calendar-day difference in the user's own timezone
         const daysUntil = daysUntilTz(subscription.next_renewal_date, userTimeZone);
+        console.log(`tz=${userTimeZone} renewal=${subscription.next_renewal_date} daysUntil=${daysUntil}`);
 
         // Generate email content
         const emailHtml = `
