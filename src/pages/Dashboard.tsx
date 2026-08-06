@@ -112,7 +112,15 @@ export default function Dashboard() {
             <p className="text-3xl font-bold text-primary">{formatCurrency(annualSpend, settings.default_currency)}</p>
           </Card>
 
-          <Card className="p-6">
+          <Card
+            className="p-6 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => navigate('/subscriptions')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') navigate('/subscriptions');
+            }}
+          >
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-success/10 rounded-lg">
                 <Layers className="h-5 w-5 text-success" />
@@ -120,6 +128,7 @@ export default function Dashboard() {
               <h3 className="text-sm font-medium text-muted-foreground">Active Subscriptions</h3>
             </div>
             <p className="text-3xl font-bold text-success">{activeSubscriptions.length}</p>
+            <p className="text-xs text-muted-foreground mt-1">View all subscriptions</p>
           </Card>
         </div>
 

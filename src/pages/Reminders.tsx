@@ -57,7 +57,6 @@ export default function Reminders() {
     });
 
     toast.success('Reminder settings saved successfully');
-    navigate('/dashboard');
   };
 
   const handleSendTestReminder = async () => {
