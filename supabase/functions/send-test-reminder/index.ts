@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { daysUntil as daysUntilTz } from '../_shared/dates.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -100,10 +101,11 @@ serve(async (req) => {
     // Preferred display currency from the user's settings
     const { data: userSettings } = await supabaseAdmin
       .from('user_settings')
-      .select('default_currency')
+      .select('default_currency, time_zone')
       .eq('user_id', user.id)
       .maybeSingle();
     const preferredCurrency = userSettings?.default_currency;
+    const userTimeZone = userSettings?.time_zone || 'UTC';
 
     const results = {
       total: dueReminders?.length || 0,
@@ -124,8 +126,8 @@ serve(async (req) => {
         }
 
         // Calculate days until renewal
-        const renewalDate = new Date(subscription.next_renewal_date);
-        const daysUntil = Math.ceil((renewalDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        // Calendar-day difference in the user's own timezone
+        const daysUntil = daysUntilTz(subscription.next_renewal_date, userTimeZone);
 
         // Generate email content
         const emailHtml = `

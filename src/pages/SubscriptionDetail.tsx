@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useSubscriptions } from '@/contexts/SubscriptionContext';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/currency';
+import { daysUntil as daysUntilTz } from '@/lib/dates';
 
 export default function SubscriptionDetail() {
   const { id } = useParams();
@@ -61,9 +62,7 @@ export default function SubscriptionDetail() {
 
   // No renewal history for MVP - will be implemented when we track actual renewals
 
-  const daysUntilRenewal = Math.ceil(
-    (new Date(subscription.next_renewal_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const daysUntilRenewal = daysUntilTz(subscription.next_renewal_date, settings.time_zone);
 
   return (
     <div className="min-h-screen bg-background">

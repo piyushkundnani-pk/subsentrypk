@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSubscriptions } from '@/contexts/SubscriptionContext';
 import { formatCurrency } from '@/lib/currency';
+import { daysUntil as daysUntilTz } from '@/lib/dates';
 
 const filterTags = ['All', 'Personal', 'Work', 'Family', 'High-cost'];
 
@@ -48,14 +49,10 @@ export default function Dashboard() {
   }, [activeSubscriptions]);
 
   const upcomingRenewals = useMemo(() => {
-    const today = new Date();
-    const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-    let filtered = activeSubscriptions
-      .filter((sub) => {
-        const renewalDate = new Date(sub.next_renewal_date);
-        return renewalDate >= today && renewalDate <= thirtyDaysFromNow;
-      });
+    let filtered = activeSubscriptions.filter((sub) => {
+      const d = daysUntilTz(sub.next_renewal_date, settings.time_zone);
+      return d >= 0 && d <= 30;
+    });
 
     // Apply tag filter
     if (activeTag !== 'All') {
@@ -70,12 +67,11 @@ export default function Dashboard() {
 
     return filtered
       .sort((a, b) => new Date(a.next_renewal_date).getTime() - new Date(b.next_renewal_date).getTime())
-      .map((sub) => {
-        const renewalDate = new Date(sub.next_renewal_date);
-        const daysUntil = Math.ceil((renewalDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        return { ...sub, daysUntil };
-      });
-  }, [activeSubscriptions, activeTag]);
+      .map((sub) => ({
+        ...sub,
+        daysUntil: daysUntilTz(sub.next_renewal_date, settings.time_zone),
+      }));
+  }, [activeSubscriptions, activeTag, settings.time_zone]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -186,7 +182,9 @@ export default function Dashboard() {
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground">Date</p>
                         <p className="text-sm font-medium">
-                          in {sub.daysUntil} day{sub.daysUntil !== 1 ? 's' : ''}
+                          {sub.daysUntil === 0
+                            ? 'today'
+                            : `in ${sub.daysUntil} day${sub.daysUntil !== 1 ? 's' : ''}`}
                         </p>
                       </div>
                       <Badge

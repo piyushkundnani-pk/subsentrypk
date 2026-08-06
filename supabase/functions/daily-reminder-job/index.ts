@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { daysUntil as daysUntilTz } from '../_shared/dates.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -73,12 +74,16 @@ serve(async (req) => {
     // Load each user's preferred display currency from their settings
     const userIds = [...new Set((dueReminders || []).map((r) => r.user_id))];
     const currencyByUser: Record<string, string> = {};
+    const timeZoneByUser: Record<string, string> = {};
     if (userIds.length > 0) {
       const { data: settingsRows } = await supabaseAdmin
         .from('user_settings')
-        .select('user_id, default_currency')
+        .select('user_id, default_currency, time_zone')
         .in('user_id', userIds);
-      for (const row of settingsRows || []) currencyByUser[row.user_id] = row.default_currency;
+      for (const row of settingsRows || []) {
+        currencyByUser[row.user_id] = row.default_currency;
+        timeZoneByUser[row.user_id] = row.time_zone;
+      }
     }
 
     const results = {
@@ -99,8 +104,11 @@ serve(async (req) => {
         }
 
         // Calculate days until renewal
-        const renewalDate = new Date(subscription.next_renewal_date);
-        const daysUntil = Math.ceil((renewalDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        // Calendar-day difference in the user's own timezone
+        const daysUntil = daysUntilTz(
+          subscription.next_renewal_date,
+          timeZoneByUser[reminder.user_id] || 'UTC'
+        );
 
         // Generate email content
         const emailHtml = `
