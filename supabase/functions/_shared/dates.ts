@@ -9,6 +9,19 @@ const FALLBACK_OFFSET_MINUTES: Record<string, number> = {
 
 export function todayInTimeZone(timeZone?: string): string {
   const tz = timeZone || 'UTC';
+
+  // Some saved settings use a display label such as
+  // "(GMT+05:30) India Standard Time" rather than an IANA zone name.
+  // Intl rejects those labels, so resolve their explicit GMT offset first.
+  const gmtOffset = tz.match(/GMT\s*([+-])(\d{1,2}):?(\d{2})?/i);
+  if (gmtOffset) {
+    const sign = gmtOffset[1] === '-' ? -1 : 1;
+    const hours = Number(gmtOffset[2]);
+    const minutes = Number(gmtOffset[3] || 0);
+    const offsetMinutes = sign * (hours * 60 + minutes);
+    return new Date(Date.now() + offsetMinutes * 60000).toISOString().slice(0, 10);
+  }
+
   try {
     const parts = new Intl.DateTimeFormat('en-CA', {
       timeZone: tz,
