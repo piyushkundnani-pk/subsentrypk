@@ -18,6 +18,16 @@ function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (m) => map[m]);
 }
 
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  INR: '₹', USD: '$', EUR: '€', GBP: '£', AUD: 'A$', CAD: 'C$', JPY: '¥', SGD: 'S$', AED: 'د.إ',
+};
+
+function formatAmount(amount: number | string, currency: string): string {
+  const code = (currency || 'INR').split(' ')[0].trim().toUpperCase();
+  const symbol = CURRENCY_SYMBOLS[code] ?? '';
+  return `${symbol}${amount} ${code}`.trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -87,6 +97,14 @@ serve(async (req) => {
 
     console.log(`Found ${dueReminders?.length || 0} reminders to send for user ${user.id}`);
 
+    // Preferred display currency from the user's settings
+    const { data: userSettings } = await supabaseAdmin
+      .from('user_settings')
+      .select('default_currency')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    const preferredCurrency = userSettings?.default_currency;
+
     const results = {
       total: dueReminders?.length || 0,
       sent: 0,
@@ -125,7 +143,7 @@ serve(async (req) => {
             <div style="background-color: #f0fdfa; border-left: 4px solid #0d9488; padding: 16px; margin: 24px 0; border-radius: 4px;">
               <h2 style="color: #0d9488; font-size: 18px; margin: 0 0 12px 0;">Subscription Details</h2>
               <p style="margin: 8px 0; color: #374151;"><strong>Name:</strong> ${escapeHtml(subscription.name)}</p>
-              <p style="margin: 8px 0; color: #374151;"><strong>Amount:</strong> ${escapeHtml(subscription.currency)} ${escapeHtml(String(subscription.amount))}</p>
+              <p style="margin: 8px 0; color: #374151;"><strong>Amount:</strong> ${escapeHtml(formatAmount(subscription.amount, preferredCurrency || subscription.currency))}</p>
               <p style="margin: 8px 0; color: #374151;"><strong>Renewal Date:</strong> ${escapeHtml(new Date(subscription.next_renewal_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }))}</p>
               <p style="margin: 8px 0; color: #374151;"><strong>Payment Method:</strong> ${escapeHtml(subscription.payment_method || 'Not specified')}</p>
             </div>
