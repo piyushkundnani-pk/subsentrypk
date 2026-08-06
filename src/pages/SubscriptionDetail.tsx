@@ -61,9 +61,7 @@ export default function SubscriptionDetail() {
 
   // No renewal history for MVP - will be implemented when we track actual renewals
 
-  const daysUntilRenewal = Math.ceil(
-    (new Date(subscription.next_renewal_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const daysUntilRenewal = daysUntilTz(subscription.next_renewal_date, settings.time_zone);
 
   return (
     <div className="min-h-screen bg-background">
