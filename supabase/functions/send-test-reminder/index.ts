@@ -57,7 +57,7 @@ serve(async (req) => {
 
     if (userError || !user) {
       console.error('Failed to verify user:', userError);
-      return new Response(JSON.stringify({ error: 'Unauthorized', details: userError?.message }), {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
