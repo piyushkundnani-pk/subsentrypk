@@ -41,24 +41,32 @@ Deno.serve(async (req) => {
     // Get the authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('No authorization header');
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
     }
 
     // Verify the user is authenticated
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
-    
+
     if (authError || !user) {
-      throw new Error('Unauthorized');
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
     }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     // Fetch all active subscriptions with past renewal dates
+    // Fetch only the caller's own stale subscriptions
     const { data: staleSubscriptions, error: fetchError } = await supabaseClient
       .from('subscriptions')
       .select('id, next_renewal_date, billing_frequency, custom_billing_interval_days')
+      .eq('user_id', user.id)
       .eq('status', 'Active')
       .lt('next_renewal_date', today.toISOString().split('T')[0]);
 
@@ -115,6 +123,7 @@ Deno.serve(async (req) => {
         .from('subscriptions')
         .update({ next_renewal_date: update.next_renewal_date })
         .eq('id', update.id)
+        .eq('user_id', user.id)
     );
 
     await Promise.all(updatePromises);
@@ -129,10 +138,9 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('Error cleaning up stale renewals:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      JSON.stringify({ error: 'An unexpected error occurred. Please try again.', code: 'ERR_INTERNAL' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
