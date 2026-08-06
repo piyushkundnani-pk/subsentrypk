@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useSubscriptions } from '@/contexts/SubscriptionContext';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/currency';
+import { daysUntil as daysUntilTz } from '@/lib/dates';
 
 export default function SubscriptionDetail() {
   const { id } = useParams();
