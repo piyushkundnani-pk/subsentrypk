@@ -85,7 +85,7 @@ serve(async (req) => {
     // Get all pending reminders for this user (including past ones)
     const { data: dueReminders, error: remindersError } = await supabaseAdmin
       .from('reminders')
-      .select('*, subscriptions(*), profiles(*)')
+      .select('*, subscriptions(*), profiles(*), user_settings(default_currency)')
       .eq('user_id', user.id)
       .lte('reminder_date', today)
       .in('status', ['planned', 'pending']);
@@ -135,7 +135,7 @@ serve(async (req) => {
             <div style="background-color: #f0fdfa; border-left: 4px solid #0d9488; padding: 16px; margin: 24px 0; border-radius: 4px;">
               <h2 style="color: #0d9488; font-size: 18px; margin: 0 0 12px 0;">Subscription Details</h2>
               <p style="margin: 8px 0; color: #374151;"><strong>Name:</strong> ${escapeHtml(subscription.name)}</p>
-              <p style="margin: 8px 0; color: #374151;"><strong>Amount:</strong> ${escapeHtml(subscription.currency)} ${escapeHtml(String(subscription.amount))}</p>
+              <p style="margin: 8px 0; color: #374151;"><strong>Amount:</strong> ${escapeHtml(formatAmount(subscription.amount, reminder.user_settings?.default_currency || subscription.currency))}</p>
               <p style="margin: 8px 0; color: #374151;"><strong>Renewal Date:</strong> ${escapeHtml(new Date(subscription.next_renewal_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }))}</p>
               <p style="margin: 8px 0; color: #374151;"><strong>Payment Method:</strong> ${escapeHtml(subscription.payment_method || 'Not specified')}</p>
             </div>
