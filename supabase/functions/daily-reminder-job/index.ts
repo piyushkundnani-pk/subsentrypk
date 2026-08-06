@@ -18,6 +18,16 @@ function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (m) => map[m]);
 }
 
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  INR: '₹', USD: '$', EUR: '€', GBP: '£', AUD: 'A$', CAD: 'C$', JPY: '¥', SGD: 'S$', AED: 'د.إ',
+};
+
+function formatAmount(amount: number | string, currency: string): string {
+  const code = (currency || 'INR').split(' ')[0].trim().toUpperCase();
+  const symbol = CURRENCY_SYMBOLS[code] ?? '';
+  return `${symbol}${amount} ${code}`.trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
